@@ -1,0 +1,24 @@
+name: Build Sayer Crypto APK
+on: [workflow_dispatch, push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 20}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: 17}
+      - name: Project files
+        run: |
+          mkdir -p www && cp ./*.html www/index.html
+          echo '{"name":"sayercrypto","version":"1.0.0","private":true,"dependencies":{"@capacitor/android":"^6.1.0","@capacitor/cli":"^6.1.0","@capacitor/core":"^6.1.0"}}' > package.json
+          echo '{"appId":"com.sayer.crypto","appName":"Sayer Crypto","webDir":"www","plugins":{"CapacitorHttp":{"enabled":true}}}' > capacitor.config.json
+      - run: npm install
+      - run: npx cap add android
+      - run: npx cap sync android
+      - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Sayer-Crypto-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
